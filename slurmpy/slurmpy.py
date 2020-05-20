@@ -47,6 +47,8 @@ import tempfile
 import atexit
 import hashlib
 import datetime
+from itertools import product
+import re
 
 TMPL = """\
 #!/bin/bash
@@ -179,6 +181,42 @@ class Slurm(object):
         return job_id
 
 
+def run_grid_search(name, command, name_addition=None, cmd_kwargs=None,
+                    _cmd="sbatch", tries=1, depends_on=None, slurm_kwargs=None, tmpl=None,
+                    date_in_name=True, scripts_dir="slurm-scripts",
+                    log_dir='logs', bash_strict=True):
+    pattern = re.compile(r'{{(.*?)}}')
+    grid_searches_idx = []
+    grid_searches_lst = []
+
+    for m in re.finditer(pattern, command):
+        grid_searches_lst.append(command[m.span()[0] + 2:m.span()[1] - 2].split(","))
+        grid_searches_idx.append(m.span())
+
+    prod = product(*grid_searches_lst)
+    while True:
+        elm = next(prod, None)
+        if elm:
+            command_tmp = command
+            for i, e in reversed(list(enumerate(elm))):
+                start, end = grid_searches_idx[i]
+                command_tmp = command_tmp[:start] + e + command_tmp[end:]
+            print(command_tmp)
+            # todo: slurm + run
+            # todo: name add something output add something?
+            slurm = Slurm(name=name, slurm_kwargs=slurm_kwargs, tmpl=tmpl,
+                          date_in_name=date_in_name, scripts_dir=scripts_dir,
+                          log_dir=log_dir, bash_strict=bash_strict)
+
+            slurm.run(command_tmp, name_addition=name_addition, cmd_kwargs=cmd_kwargs,
+                      _cmd=_cmd, tries=tries, depends_on=depends_on)
+
+            pass
+        else:
+            break
+
+
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
