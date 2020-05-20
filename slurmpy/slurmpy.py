@@ -201,8 +201,10 @@ def run_grid_search(name, command, name_addition=None, cmd_kwargs=None,
             for i, e in reversed(list(enumerate(elm))):
                 start, end = grid_searches_idx[i]
                 command_tmp = command_tmp[:start] + e + command_tmp[end:]
-            slurm_kwargs["output"] = "_".join(elm) + slurm_kwargs["output"]
-            slurm = Slurm(name=name, slurm_kwargs=slurm_kwargs, tmpl=tmpl,
+            output = "_".join(elm) + slurm_kwargs["output"]
+            slurm_kwargs_temp = slurm_kwargs.copy()
+            slurm_kwargs_temp["output"] = output
+            slurm = Slurm(name=name, slurm_kwargs=slurm_kwargs_temp, tmpl=tmpl,
                           date_in_name=date_in_name, scripts_dir=scripts_dir,
                           log_dir=log_dir, bash_strict=bash_strict)
 
