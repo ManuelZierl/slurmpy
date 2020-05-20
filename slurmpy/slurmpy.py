@@ -194,6 +194,7 @@ def run_grid_search(name, command, name_addition=None, cmd_kwargs=None,
         grid_searches_idx.append(m.span())
 
     prod = product(*grid_searches_lst)
+    counter = 0
     while True:
         elm = next(prod, None)
         if elm:
@@ -204,6 +205,8 @@ def run_grid_search(name, command, name_addition=None, cmd_kwargs=None,
             print(command_tmp)
             # todo: slurm + run
             # todo: name add something output add something?
+            slurm_kwargs["output"] = str(counter) + ".txt"
+
             slurm = Slurm(name=name, slurm_kwargs=slurm_kwargs, tmpl=tmpl,
                           date_in_name=date_in_name, scripts_dir=scripts_dir,
                           log_dir=log_dir, bash_strict=bash_strict)
@@ -211,7 +214,7 @@ def run_grid_search(name, command, name_addition=None, cmd_kwargs=None,
             slurm.run(command_tmp, name_addition=name_addition, cmd_kwargs=cmd_kwargs,
                       _cmd=_cmd, tries=tries, depends_on=depends_on)
 
-            pass
+            counter += 1
         else:
             break
 
